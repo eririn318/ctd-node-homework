@@ -1,9 +1,8 @@
-const fs = require('fs');//Node's built-in file system module. It gives you tools like readFile, writeFile, etc., to interact with files on your computer
-const path = require('path');//Node's built-in path module. It helps you build file paths safely, without worrying about differences between operating systems (like / on Mac/Linux vs \ on Windows)
-
+const fs = require("fs"); //Node's built-in file system module. It gives you tools like readFile, writeFile, etc., to interact with files on your computer
+const path = require("path"); //Node's built-in path module. It helps you build file paths safely, without worrying about differences between operating systems (like / on Mac/Linux vs \ on Windows)
 
 // Write a sample file for demonstration
-const filePath = path.join(__dirname, 'sample-files', 'sample.txt')
+const filePath = path.join(__dirname, "sample-files", "sample.txt");
 
 // path.join(__dirname, 'sample-files', 'sample.txt')
 // produces:
@@ -21,17 +20,18 @@ const filePath = path.join(__dirname, 'sample-files', 'sample.txt')
 
 // Why we specifically chose writeFileSync here:
 // Since we need sample.txt to definitely exist before our callback/promise/async-await examples try to read it, using the synchronous version guarantees the file is fully written before any code below it runs. If we used the async version instead, there's a small risk the read attempts could start before the write finishes (since async operations don't block)
-fs.writeFileSync(filePath, "Hello, async world!")
+fs.writeFileSync(filePath, "Hello, async world!");
 
 // 1. Callback style
-fs.readFile(filePath, 'utf8', (err, data) => {//utf8 is the encoding — it tells Node how to interpret the raw bytes in the file and turn them into readable text.
-  if(err){
-    console.log("Callback error", err.message)
-    return
-  }else{
-    console.log("Callback read", data)
+fs.readFile(filePath, "utf8", (err, data) => {
+  //utf8 is the encoding — it tells Node how to interpret the raw bytes in the file and turn them into readable text.
+  if (err) {
+    console.log("Callback error", err.message);
+    return;
+  } else {
+    console.log("Callback read", data);
   }
-})
+});
 
 //call back part:
 // (err, data) => {
@@ -65,57 +65,59 @@ adds another layer of indentation, making the code hard to read,
 hard to maintain, and hard to handle errors consistently.
 */
 
-  // 2. Promise style
+// 2. Promise style
 function readFilePromise(filePath) {
   //(resolve, reject) is parameter, filled in by JAVASCRIPT (from the Promise constructor)
-  return new Promise((resolve, reject)=> {//Promise is JavaScript 
+  return new Promise((resolve, reject) => {
+    //Promise is JavaScript
     //new Promise(...) is created immediately, and its logic starts running right away.
     // Inside that Promise, we call fs.readFile, passing it a callback:
-    fs.readFile(filePath, 'utf8', (err,data) => {//fs.readFile — this IS from Node //This is the actual built-in function, part of the fs module. It's the thing doing the real work of reading the file, and it uses the old callback style: (err, data) => {...}.
-    //(err,data) is parameter
-    // fs.readFile tries to read sample.txt
-    // if it fails -> err gets the error info, data stays empty
-    // if it succeeds -> data gets the file's text content ("Hello, async world!"), err stays null
-      if(err){
-  // If the file read fails:
-  // -> err gets filled in by Node (with the error info)
-  // -> we then call reject(err), which makes the Promise "rejected"
-        reject(err)
-        return
+    fs.readFile(filePath, "utf8", (err, data) => {
+      //fs.readFile — this IS from Node //This is the actual built-in function, part of the fs module. It's the thing doing the real work of reading the file, and it uses the old callback style: (err, data) => {...}.
+      //(err,data) is parameter
+      // fs.readFile tries to read sample.txt
+      // if it fails -> err gets the error info, data stays empty
+      // if it succeeds -> data gets the file's text content ("Hello, async world!"), err stays null
+      if (err) {
+        // If the file read fails:
+        // -> err gets filled in by Node (with the error info)
+        // -> we then call reject(err), which makes the Promise "rejected"
+        reject(err);
+        return;
       }
-  //  If the file read succeeds:
-  // -> data gets filled in by Node (with the file's contents)
-  // -> we then call resolve(data), which makes the Promise "fulfilled"
-      resolve(data)
-    })
-  })
+      //  If the file read succeeds:
+      // -> data gets filled in by Node (with the file's contents)
+      // -> we then call resolve(data), which makes the Promise "fulfilled"
+      resolve(data);
+    });
+  });
 }
 
-readFilePromise(filePath)//calling function
-//after the function call
-.then((data)=> {//.then(...) → runs only when the Promise was resolved — and the data you see inside .then() is exactly what was passed into resolve(data)
-  console.log("Promise read:", data)
-})
-.catch((err)=> {//.catch(...) → runs only when the Promise was rejected — and the err you see inside .catch() is exactly what was passed into reject(err)
-  console.log("Promise error:", err.message)
-})
+readFilePromise(filePath) //calling function
+  //after the function call
+  .then((data) => {
+    //.then(...) → runs only when the Promise was resolved — and the data you see inside .then() is exactly what was passed into resolve(data)
+    console.log("Promise read:", data);
+  })
+  .catch((err) => {
+    //.catch(...) → runs only when the Promise was rejected — and the err you see inside .catch() is exactly what was passed into reject(err)
+    console.log("Promise error:", err.message);
+  });
 
 // 3. Async/Await style
 async function readFileAsync() {
-  try{
-    const data = await readFilePromise(filePath)
-    console.log("Async/Await read:", data)
-  }catch(err){
-    console.log("Async/Await error:", err.message)
+  try {
+    const data = await readFilePromise(filePath);
+    console.log("Async/Await read:", data);
+  } catch (err) {
+    console.log("Async/Await error:", err.message);
   }
 }
 
-readFileAsync()
-
+readFileAsync();
 
 // fs.writeFile(...) → asynchronous version (needs a callback, doesn't block, continues running other code while it works)
 // fs.writeFileSync(...) → synchronous version (blocks/pauses everything until the write is fully done, then moves to the next line)
-
 
 //====err, data (values) are passed as arguments into resolve/reject (functions)===
 // function sayHello(name) {
