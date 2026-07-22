@@ -7,23 +7,6 @@ const app = express();
 
 // Assignment 3b and 3c ask you to add middleware in this file.
 
-// built-in middleware
-app.use(express.json()) // POST /adopt can read req.body
-app.use("/images", express.static(path.join(__dirname, "public/images"))) // dog images can be served from week-3-middleware/public/images//__dirname is the file's actual location on disk(the absolute folder path of the file currently running)
-//path.join combines path segments together correctly — handling slashes properly across different operating systems (Mac/Linux use /, Windows uses \)
-//path.join takes __dirname (the folder app.js is in) and appends "public/images" onto the end of it, producing the full, correct absolute path — regardless of OS or what directory you ran the command from.
-
-//__dirname = /Users/mac13/Desktop/CodeTheDream-2026/node-homework/week-3-middleware
-//look for "public/images"
-//request: GET http://localhost:3000/images/dachshund.png in postman
-//get dachshund.png
-
-// express.static() — serves outgoing files that already exist on disk
-// It's for when a client makes a GET request asking for a file that already exists in your project folder (like an image), and Express just reads that file off disk and sends it back as the response.
-
-
-
-
 //request ID middleware — custom middleware
 app.use((req,res,next)=>{
   req.requestId = randomUUID()//Generate a random unique ID, and store it as a new property (requestId) directly on the req object.
@@ -46,13 +29,26 @@ app.use((req, res, next) => {
   next()
  })
 
+// built-in middleware //JSON parsing 
+app.use(express.json()) // POST /adopt can read req.body
+app.use("/images", express.static(path.join(__dirname, "public/images"))) // dog images can be served from week-3-middleware/public/images//__dirname is the file's actual location on disk(the absolute folder path of the file currently running)
+//path.join combines path segments together correctly — handling slashes properly across different operating systems (Mac/Linux use /, Windows uses \)
+//path.join takes __dirname (the folder app.js is in) and appends "public/images" onto the end of it, producing the full, correct absolute path — regardless of OS or what directory you ran the command from.
+
+//__dirname = /Users/mac13/Desktop/CodeTheDream-2026/node-homework/week-3-middleware
+//look for "public/images"
+//request: GET http://localhost:3000/images/dachshund.png in postman
+//get dachshund.png
+
+// express.static() — serves outgoing files that already exist on disk
+// It's for when a client makes a GET request asking for a file that already exists in your project folder (like an image), and Express just reads that file off disk and sends it back as the response.
 app.use("/", dogsRouter);// Do not remove this line
 
-`if (require.main === module) {
+if (require.main === module) {
   app.listen(3000, () => {
     console.log("Dog rescue app is listening on port 3000...");
   });
-}`
+}
 
 // 404 handler — catches any request that didn't match a real route
 app.use((req, res) => {

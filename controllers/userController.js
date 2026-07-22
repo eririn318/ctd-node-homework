@@ -2,14 +2,6 @@
 
 function register(req, res) {
     const {name, email, password} = req.body //read name, email, password from body in postman
-    
-    const existEmail = global.users.find((user) => user.email === email) //find matching email
-        if(existEmail){
-            return res.status(400).json({//400 bad request-Client error — "something about what you sent was wrong."
-            message: "A uer with this Email already exists"
-        })
-    }
-
     const newUser = {name, email, password} //put these 3 into newUser
     global.users.push(newUser)// Push newUser into the global.users array
     global.user_id = newUser // 1 item from array // whoever is currently logged in
@@ -29,7 +21,6 @@ function register(req, res) {
         name: newUser.name,
         email: newUser.email
     })
- 
 }
 
 function logon(req, res) {
