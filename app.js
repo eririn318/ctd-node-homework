@@ -1,8 +1,9 @@
 const express = require("express")
 const userRoutes = require("./routes/userRoutes")
+const taskRoutes = require("./routes/taskRoutes")
 const notFound = require("./middleware/not-found")
 const errorHandler = require("./middleware/error-handler")
-
+const authMiddleware  = require("./middleware/auth")
 const app = express()
 
 global.user_id = null
@@ -11,7 +12,9 @@ global.tasks = []
 
 app.use(express.json())//express.json()'s whole job is to prepare req.body so it's ready and usable by the time any of your route handlers run.
 
-app.use("/api/users", userRoutes)
+app.use("/api/users", userRoutes)//Users need to register and log on before they can access protected routes.so this line is before authMiddleware
+app.use("/api/tasks", authMiddleware,taskRoutes)
+//This is the difference between public and protected routes. User routes stay public so a user can start a session. Task routes are protected because they work with private user data.
 
 app.use(notFound) //with no path — meaning they apply broadly(not-found catches any unmatched requests)
 app.use(errorHandler) //with no path - meaning they apply broadly(error-handler catches errors from anywhere)
