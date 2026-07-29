@@ -9,7 +9,7 @@ function taskCounter(){//call
 // Task 2 → id: 2
 // Task 3 → id: 3
 
-exports.create = async(req, res) => {
+async function create(req, res) {
     // 1. Ensure req.body exists
     if(!req.body) req.body= {}
     // 2. Validate request body using taskSchema
@@ -110,12 +110,12 @@ function show (req, res) {
         const {error, value} = patchTaskSchema.validate(req.body)
         // 3. Return 400 if validation fails
         if(error) {
-            const errorMessage = error.details.message.map((detail)=>detail.message).join(", ")
+            const errorMessage = error.details.map((detail)=>detail.message).join(", ")
             return res.status(400).json({message: errorMessage})
         }
         // 4. Convert req.params.id to a number
         const taskId = parseInt(req.params.id, 10)
-        if(isNaN(taskId)) return res.status(404).json({message: "ID id not valid"})
+        if(isNaN(taskId)) return res.status(400).json({message: "ID id not valid"})
         // 5. Find a task with that ID and the logged-in user's email
         const task = global.tasks.find((task) => task.id === taskId && task.userId === global.user_id.email)
         // 6. Return 404 if no matching task exists
@@ -184,7 +184,7 @@ function deleteTask(req, res) {
     return res.status(200).json(sanitizedTask)
 }
 
-module.exports = {taskCounter, createTask, index, show, update, deleteTask, create: exports.create}
+module.exports = {taskCounter, createTask, index, show, update, deleteTask, create}
 
 
 //=====why userId is removed?=====
