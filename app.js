@@ -5,6 +5,7 @@ const notFound = require("./middleware/not-found")
 const errorHandler = require("./middleware/error-handler")
 const authMiddleware  = require("./middleware/auth")
 const app = express()
+const pool = require("./db/pg-pool")
 
 global.user_id = null
 global.users = []
@@ -16,6 +17,15 @@ app.use("/api/users", userRoutes)//Users need to register and log on before they
 app.use("/api/tasks", authMiddleware,taskRoutes)
 //This is the difference between public and protected routes. User routes stay public so a user can start a session. Task routes are protected because they work with private user data.
 
+app.get("/health", async (req, res) => {
+    try {
+        await pool.query("SELECT 1")//sending "SELECT 1" to Postgres and return 1 with no table
+        res.json({status: "ok", db: "connected"})
+    }catch(err){
+        res.status(500).json({message: `db not connected, error: ${err.message}`})
+    }
+})
+
 app.use(notFound) //with no path — meaning they apply broadly(not-found catches any unmatched requests)
 app.use(errorHandler) //with no path - meaning they apply broadly(error-handler catches errors from anywhere)
 
@@ -24,6 +34,19 @@ const port = process.env.PORT || 3000
 const server = app.listen(port, () =>{
     console.log(`Server is listening on port ${port}...`)
 })
+
+//shutdown function, closes DB connections before exiting
+async function shutdown() {
+    await pool.end()
+    server.close(() => {
+        console.log("Server closed.")
+        process.exit(0)
+    })
+}
+
+//To shutdown
+process.on("SIGINT", shutdown) //Ctrl+C → OS sends SIGINT → your code catches it → shutdown() runs
+process.on("SIGTERM", shutdown)//Hosting platform/system tool/kill command → OS sends SIGTERM → your code catches it → shutdown() runs
 
 module.exports = {app, server}
 
