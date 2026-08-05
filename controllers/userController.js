@@ -33,7 +33,7 @@ async function comparePassword(inputPassword, storedHash) {
 // Output: Returns the binary Buffer, converted to a hex string, and checks if it matches the stored key (key === derivedKey.toString("hex")).
 }
 
-    exports.register = async (req, res) => {
+    exports.register = async (req, res, next) => {
         // 1. Ensure req.body is defined
         if(!req.body) req.body = {}
         // 2. Validate request body against userSchema
