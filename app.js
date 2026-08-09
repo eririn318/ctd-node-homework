@@ -6,9 +6,8 @@ const errorHandler = require("./middleware/error-handler")
 const authMiddleware  = require("./middleware/auth")
 const app = express()
 const prisma = require("./db/prisma");
+const pool = require("./db/pg-pool")
 
-process.on('exit', (code) => console.log('★ PROCESS EXIT EVENT — code:', code))
-process.on('beforeExit', (code) => console.log('★ BEFORE EXIT EVENT — code:', code))
 global.user_id = null
 global.users = []
 global.tasks = []
@@ -25,7 +24,7 @@ app.get("/health", async (req, res) => {
         if(err.name === "PrismaClientInitializationError"){
         console.error("Couldn't connect to the database. Is it running?")
 }   
-        res.status(500).json({message: `status: 'error', db: 'not connected', error: err.message`})
+        res.status(500).json({status: "error", db: "not connected", error: err.message})
     }
 })
 
@@ -38,7 +37,6 @@ const server = app.listen(port, () =>{
 })
 
 async function shutdown() {
-      console.log("SHUTDOWN WAS CALLED!") 
     await prisma.$disconnect()
     console.log("Prisma disconnected.")
 

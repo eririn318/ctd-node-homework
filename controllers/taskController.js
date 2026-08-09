@@ -52,7 +52,7 @@ try{
     })
     }catch(err){
     if(err.code === "P2025") {
-        return res.status(404).json({message: "Task was not found"})
+        return res.status(404).json({message: "The task was not found."})
     }else{
         return next(err)
     }}
@@ -90,7 +90,7 @@ try{
         catch(err)
         {   //P2025 — record not found → 404
             if(err.code === "P2025"){
-            return res.status(404).json({message: "Task was not found"})
+            return res.status(404).json({message: "The task was not found."})
         }else{
         return next(err)
     }
@@ -121,7 +121,7 @@ try{
 }
 catch(err){
 if(err.code === "P2025"){
-    return res.status(404).json({message: "Task was not found"})
+    return res.status(404).json({message: "The task was not found."})
 }else{
     return next(err)
 }}
