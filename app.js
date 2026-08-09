@@ -6,7 +6,6 @@ const errorHandler = require("./middleware/error-handler")
 const authMiddleware  = require("./middleware/auth")
 const app = express()
 const prisma = require("./db/prisma");
-const pool = require("./db/pg-pool")
 
 global.user_id = null
 global.users = []

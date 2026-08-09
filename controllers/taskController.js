@@ -26,9 +26,7 @@ async function index(req, res){
         select: {id:true, title:true, isCompleted:true}
     }
     )
-    if (tasks.length === 0) {
-        return res.status(404).json({message: "No tasks found"})
-    }
+   
     return res.status(200).json(tasks)
 }
 
@@ -56,6 +54,11 @@ try{
     }else{
         return next(err)
     }}
+
+     if (!task) {
+        return res.status(404).json({message: "The task was not found."})
+    }
+
     return res.status(200).json(task)
     }
 
