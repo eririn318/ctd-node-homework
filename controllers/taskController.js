@@ -1,10 +1,6 @@
 const {taskSchema, patchTaskSchema} = require("../validation/taskSchema")
 const prisma = require("../db/prisma")
 
-let nextTaskId = 1 
-function taskCounter(){
- return nextTaskId++ 
-}
 async function create(req, res) {
 
     const {error, value} = taskSchema.validate(req.body)
@@ -37,7 +33,7 @@ async function index(req, res){
 }
 
 async function show (req, res, next) {
-    const taskId = (req.params.id, 10)
+    const taskId = parseInt(req.params.id, 10)
     if(isNaN(taskId)){
         return res.status(400).json({message: "ID is not valid"})
     }
@@ -45,7 +41,13 @@ async function show (req, res, next) {
     let task
 try{
     task = await prisma.task.findUnique({
-        where:{id: taskId, userId: global.user_id},
+        where:{
+            id_userId:
+                {
+                    id: taskId, 
+                    userId: global.user_id
+                }
+            },
         select:{id: true, title: true, isCompleted: true}
     })
     }catch(err){
@@ -54,8 +56,14 @@ try{
     }else{
         return next(err)
     }}
+      if(!task){
+        return res.status(404).json({
+            message: "Task not found"
+        })
+    }
     return res.status(200).json(task)
     }
+
     async function update(req, res, next) {
 
         const {error, value} = patchTaskSchema.validate(req.body)
@@ -74,7 +82,13 @@ try{
         try{
             updatedTask = await prisma.task.update({
                 data: value,
-                where: {id: taskId, userId: global.user_id},
+                where: {
+                    id_userId:
+                        {
+                            id: taskId, 
+                            userId: global.user_id
+                        }
+            },
                 select: {id: true, title: true, isCompleted: true}
             }  
         )}
@@ -85,11 +99,9 @@ try{
         }else{
         return next(err)
     }
-    }
+}
        return res.status(200).json(updatedTask)
 }
-
-
 async function deleteTask(req, res, next) {
 
 const taskId = parseInt(req.params.id, 10)
@@ -101,7 +113,15 @@ if(isNaN(taskId)){
 
 try{
     await prisma.task.delete(
-    {where: {id: taskId, userId: global.user_id}}
+    {
+        where: {
+            id_userId:
+                {
+                id: taskId, 
+                userId: global.user_id
+                }
+         }
+    }
 )
 }
 catch(err){
@@ -113,4 +133,4 @@ if(err.code === "P2025"){
 return res.status(200).json({message: "Task deleted successfully"})
 }
 
-module.exports = {taskCounter, index, show, update, deleteTask, create}
+module.exports = {index, show, update, deleteTask, create}
