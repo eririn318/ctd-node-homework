@@ -25,7 +25,7 @@ app.get("/health", async (req, res) => {
         if(err.name === "PrismaClientInitializationError"){
         console.error("Couldn't connect to the database. Is it running?")
 }   
-        res.status(500).json({message: `db not connected, error: ${err.message}`})
+        res.status(500).json({message: `status: 'error', db: 'not connected', error: err.message`})
     }
 })
 
