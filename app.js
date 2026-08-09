@@ -5,7 +5,6 @@ const notFound = require("./middleware/not-found")
 const errorHandler = require("./middleware/error-handler")
 const authMiddleware  = require("./middleware/auth")
 const app = express()
-// const pool = require("./db/pg-pool")
 const prisma = require("./db/prisma");
 
 process.on('exit', (code) => console.log('★ PROCESS EXIT EVENT — code:', code))
