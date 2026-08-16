@@ -31,13 +31,26 @@ async function comparePassword(inputPassword, storedHash) {
         }
     const hashedPassword = await hashPassword(value.password)
     // create welcome tasks for every new user
-    try{
+    
+    
+    try{//This wraps multiple database operations so they all succeed together, or all fail together
         const result = await prisma.$transaction(async(tx) => {//start transaction
+            //$transaction is a way of grouping several database operations together so they're treated as one single, all-or-nothing unit — either every operation inside it succeeds, or none of them do.
+
+            // ==async (tx) => {...} — this is a function you're passing in, containing everything that should happen inside the transaction
+
+            // ==tx — a special version of the Prisma client, scoped to this one transaction. You use tx.user.create(...) instead of prisma.user.create(...) for anything that needs to be part of this atomic group
+
+            //why this matters here: if creating the user succeeds, but creating the welcome tasks fails halfway through (say, only 1 of 3 tasks got created before an error), you'd end up with a user account that has an incomplete, broken set of welcome tasks. The transaction prevents this — if anything inside the async (tx) => {...} function throws an error, Prisma automatically rolls back everything that happened inside it, including the user creation. Either the whole registration (user + all 3 tasks) succeeds, or none of it gets saved at all.
+
+
+
             //create user account using tx instead of prisma
             const newUser = await tx.user.create({
                 data: {email:value.email, name: value.name, hashedPassword},//data is the Prisma option that specifies what values to actually write into the new record.
                 select: {id: true, email: true, name: true}
             })
+    
 
         //create 3 welcome tasks using createMany
         const welcomeTaskData = [
@@ -55,6 +68,9 @@ async function comparePassword(inputPassword, storedHash) {
                     userId: newUser.id,
                     title: {in: welcomeTaskData.map(task => task.title)}
                 },
+                    //welcomeTaskData.map(task => task.title) — takes your array of 3 task objects and extracts just their titles, producing: ["Complete your profile", "Add your first task", "Explore the app"]
+                    // title: {in: [...]} — tells Prisma: "find tasks whose title matches any one of these three strings"
+                    // So this findMany call is essentially saying: "give me back the tasks that were just created, by matching on userId AND having a title that's one of these three exact strings" — since createMany doesn't return the actual created records itself (it just returns a count), this separate findMany is how you fetch them back afterward to include in your response.
                 select: {
                     id: true,
                     title: true,
@@ -63,9 +79,24 @@ async function comparePassword(inputPassword, storedHash) {
                     priority: true
                 }
             })
-            return{user: newUser, welcomeTasks} 
+            return{user: newUser, welcomeTasks} //objet->user: -> const newUser, welcomeTasks, that's why no {}// returning two at the same time
+        
+        //{user: newUser, welcomeTasks: welcomeTasks}
+// (and welcomeTasks alone, without the colon, is just shorthand for welcomeTasks: welcomeTasks — same shorthand pattern we discussed earlier with hashedPassword)
+// So concretely, after this transaction finishes, result (from const result = await prisma.$transaction(...)) looks like:
+
+// {
+//   user: {id: 5, email: "alice@example.com", name: "Alice Smith"},
+//   welcomeTasks: [{...}, {...}, {...}]
+// }
+
+// That's exactly why your code afterward can write result.user.id, result.user, result.welcomeTasks — because user: and welcomeTasks (bundled here) become the property names on that returned object.
+        
      })
 
+
+
+        // Store the user ID globally for session management 
         global.user_id = result.user.id
 
         res.status(201)
@@ -83,7 +114,28 @@ async function comparePassword(inputPassword, storedHash) {
     }else{
         return next(err)
     }}}
+    // let user= null 
+    //     try{
+    //         user = await prisma.user.create({
+    //             data:{name: value.name, email: value.email, hashedPassword},
+    //             select: {name: true, email: true, id: true}//specify the column values to return
+    //         })
+    //     }
+    //     catch(err){
+    //             if(err.name === "PrismaClientKnownRequestError" && err.code ==="P2002"){
+    //                 return res.status(400).json({
+    //                     "message": "Email is already registered"
+    //                 })
+    //     }else{
+    //             return next(err)
+    //             }
+    //         }
+    //     global.user_id = user.id
 
+    // res.status(201).json({
+    //     name: user.name,
+    //     email: user.email
+    // })
 
 async function logon(req, res) {
     const {password} = req.body || {}
@@ -94,6 +146,7 @@ async function logon(req, res) {
     }
 
     email = email.toLowerCase() 
+    // Prisma returns either the user object OR null
     const user = await prisma.user.findUnique({
         where: {email}, 
         select: {
