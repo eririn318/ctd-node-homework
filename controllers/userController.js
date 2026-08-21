@@ -2,6 +2,40 @@ const {userSchema} = require("../validation/userSchema")
 const crypto = require("crypto")
 const util = require("util")
 const prisma = require("../db/prisma")
+const {randomUUID} = require("crypto")// built-in Node.js function to generate a random unique ID
+const jwt = require("jsonwebtoken")// library for signing and verifying JWTs
+
+const cookieFlags =(req) => {
+    return {
+        httpOnly: true,// JS on the page can't read this cookie (protects against theft via XSS)
+        secure: process.env.NODE_ENV === "production",// only send over HTTPS in production // // if "production" !== "production" become false
+        sameSite: "Strict" // never send this cookie on requests coming from another site (helps block CSRF)
+  };
+};
+
+const setJwtCookie = (req, res, user) => {
+    // Build the JWT payload: who the user is + a random secret CSRF token
+    const payload = {id: user.id, csrfToken: randomUUID()}
+    
+    // Sign the payload with our server-only secret; token expires in 1 hour
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})//1hour expiration
+    
+    // Attach the signed JWT to the response as a cookie named "jwt"
+    res.cookie(
+        "jwt", // name of the cookie
+        token, // value of the cookie: the signed JWT string
+        {
+        ...cookieFlags(req),
+        //inside ...cookieFlags(req)
+            //httpOnly: true,   // JS running in the browser can't read this cookie (protects against XSS theft)
+            //secure: false,    // (in dev environment) allow sending over plain HTTP, not just HTTPS
+            //sameSite: "Strict", // never send this cookie on requests coming from another site (helps block CSRF)
+        maxAge: 3600000
+        })//1hour = 3,600,000 ms  expiration
+
+        // Return just the csrfToken so the caller (logon/register) can send it back in the response body
+        return payload.csrfToken 
+    }
 
 const scrypt = util.promisify(crypto.scrypt)
 
@@ -66,18 +100,20 @@ async function comparePassword(inputPassword, storedHash) {
             return{user: newUser, welcomeTasks} 
      })
 
-        global.user_id = result.user.id
-
-        res.status(201)
+     const csrfToken = setJwtCookie(req, res, result.user)//create JWT + set cookie
+        
+     res.status(201)
         res.json({
             user: result.user,
             welcomeTasks: result.welcomeTasks,
-            transactionStatus: "success"
+            transactionStatus: "success",
+            csrfToken:csrfToken//include CSRF token in the response
         })
         return
     }catch(err){
         if(err.code === "P2002") {
             return res.status(400).json({
+                message: "Email is already registered",
                 error: "Email is already registered"
             })
     }else{
@@ -111,19 +147,22 @@ async function logon(req, res) {
     const goodCredentials = await comparePassword(password, user.hashedPassword)
 
 if(goodCredentials){
-        global.user_id = user.id
-        res.status(200).json ({
+        const csrfToken = setJwtCookie(req, res, user) //create JWT + set cookie
+        
+        return res.status(200).json ({
             id: user.id,
             name: user.name, 
-            email: user.email})
+            email: user.email,
+            csrfToken: csrfToken//include CSRF token in the response
+        })
     }else{
-        res.status(401).json({
+        return res.status(401).json({
             message: "Email or password is invalid"
         })
     }}
 
 function logoff(req, res) {
-    global.user_id = null 
+    res.clearCookie("jwt", cookieFlags(req))//clear the cookie
     res.status(200).json({
         message: "Successfully logged off"
     })
