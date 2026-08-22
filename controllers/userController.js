@@ -11,7 +11,7 @@ const cookieFlags =(req) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "Strict" 
 };
-
+}
 const setJwtCookie = (req, res, user) => {
     const payload = {id: user.id, csrfToken: randomUUID()}
         const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})//1hour expiration
@@ -83,7 +83,7 @@ async function comparePassword(inputPassword, storedHash) {
                     title: true,
                     isCompleted: true,
                     userId: true,
-                    priority: true
+                    priority: true,
                 }
             })
             return{user: newUser, welcomeTasks} 
@@ -92,13 +92,14 @@ async function comparePassword(inputPassword, storedHash) {
      const csrfToken = setJwtCookie(req, res, result.user)//create JWT + set cookie
         
      res.status(201)
-        res.json({
-            user: result.user,
+        return res.json({
+            // user: result.user,
             welcomeTasks: result.welcomeTasks,
             transactionStatus: "success",
+            user: { name: result.user.name },
+            name: result.user.name,
             csrfToken:csrfToken//include CSRF token in the response
         })
-        return
     }catch(err){
         if(err.code === "P2002") {
             return res.status(400).json({
@@ -140,8 +141,9 @@ if(goodCredentials){
         
         return res.status(200).json ({
             id: user.id,
-            name: user.name, 
             email: user.email,
+            user: { name: user.name },
+            name: user.name,
             csrfToken: csrfToken//include CSRF token in the response
         })
     }else{
