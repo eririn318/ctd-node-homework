@@ -94,10 +94,13 @@ async function comparePassword(inputPassword, storedHash) {
      res.status(201)
         return res.json({
             // user: result.user,
-            welcomeTasks: result.welcomeTasks,
-            transactionStatus: "success",
-            user: { name: result.user.name },
-            name: result.user.name,
+            // welcomeTasks: result.welcomeTasks,
+            // transactionStatus: "success",
+            user:{
+                name: result.user.name,
+                welcomeTasks: result.welcomeTasks,
+                transactionStatus: "success"
+            },
             csrfToken:csrfToken//include CSRF token in the response
         })
     }catch(err){
@@ -141,9 +144,8 @@ if(goodCredentials){
         
         return res.status(200).json ({
             id: user.id,
+            name: user.name, 
             email: user.email,
-            user: { name: user.name },
-            name: user.name,
             csrfToken: csrfToken//include CSRF token in the response
         })
     }else{
