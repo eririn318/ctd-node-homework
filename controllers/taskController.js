@@ -1,3 +1,6 @@
+
+
+
 const {taskSchema, patchTaskSchema} = require("../validation/taskSchema")
 const prisma = require("../db/prisma")
 
@@ -92,11 +95,8 @@ async function show (req, res, next) {
 try{
     task = await prisma.task.findUnique({
         where:{
-            id_userId:
-                {
                     id: taskId, 
                     userId: req.user.id
-                }
             },
         select:{
             id: true, 
@@ -144,11 +144,8 @@ try{
             updatedTask = await prisma.task.update({
                 data: value,
                 where: {
-                    id_userId:
-                        {
                             id: taskId, 
                             userId: req.user.id
-                        }
             },
                 select: {id: true, title: true, isCompleted: true, priority: true}
             }  
@@ -176,11 +173,8 @@ try{
     await prisma.task.delete(
     {
         where: {
-            id_userId:
-                {
                 id: taskId, 
-                userId: req.user.id
-                }
+                userId: req.user.id     
          }
     }
 )

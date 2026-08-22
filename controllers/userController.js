@@ -97,9 +97,8 @@ async function comparePassword(inputPassword, storedHash) {
             // welcomeTasks: result.welcomeTasks,
             // transactionStatus: "success",
             user:{
-                name: result.user.name,
-                welcomeTasks: result.welcomeTasks,
-                transactionStatus: "success"
+                name: result.user.name, 
+                email: result.user.email,
             },
             csrfToken:csrfToken//include CSRF token in the response
         })
@@ -143,7 +142,6 @@ if(goodCredentials){
         const csrfToken = setJwtCookie(req, res, user) //create JWT + set cookie
         
         return res.status(200).json ({
-            id: user.id,
             name: user.name, 
             email: user.email,
             csrfToken: csrfToken//include CSRF token in the response
