@@ -6,6 +6,9 @@ const taskController = require("../controllers/taskController")
 // POST /api/tasks -> create
 router.post("/", taskController.create)
 
+//POST /api/tasks/bulk ->bulkCreate
+router.post("/bulk", taskController.bulkCreate)
+
 // GET /api/tasks -> index
 router.get("/", taskController.index)
 
@@ -17,5 +20,7 @@ router.patch("/:id", taskController.update)
 
 // DELETE /api/tasks/:id -> deleteTask
 router.delete("/:id", taskController.deleteTask)
+
+
 
 module.exports = router

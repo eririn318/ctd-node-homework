@@ -1,0 +1,230 @@
+const prisma = require("../db/prisma")
+
+// GET /api/analytics/users/:id
+async function getUserAnalytics(req, res) {
+    //1. Parse and validate user ID
+    const userId = parseInt(req.params.id, 10)
+    if(isNaN(userId)){
+        return res.status(400).json({message: "ID is not valid"})
+    }
+// 2. Check if user exists (404 Check)
+    const user = await prisma.user.findUnique ({
+        where: {id: userId}
+    })
+    if(!user) {
+        return res.status(404).json({
+            message: "User not found" 
+        })
+    }
+    // 3. Count tasks by completion status using groupBy
+    const taskStats = await prisma.task.groupBy({
+        by: ['isCompleted'],// Tells Prisma which column to group the database rows by. In this case, PostgreSQL will split tasks into two buckets: isCompleted: true and isCompleted: false.
+        where: {userId},// Filters which rows get grouped. This ensures you only calculate statistics for the logged-in user's tasks.
+        _count: {// Tells Prisma to count how many records fall into each group.
+        id: true
+        }
+    })
+//  [{ "isCompleted": false, "_count": 8 },
+//  { "isCompleted": true, "_count": 12 }]
+// (Translation: This user has 8 incomplete tasks and 12 completed tasks).
+
+
+// 4. Get 10 recent tasks with user info via eager loading
+    const recentTasks = await prisma.task.findMany({
+        where: {userId},
+        select: {
+            id: true,
+            title: true,
+            isCompleted: true,
+            priority: true,
+            createdAt: true,
+            userId: true,
+            User: {
+                select: {
+                    name: true
+                }
+                 }
+            },
+            orderBy: {createdAt: 'desc'},
+            take: 10
+    })
+
+// 5. Calculate date 7 days ago
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7 )
+// 6. Calculate weekly progress using groupBy
+    const weeklyProgress = await prisma.task.groupBy({
+        by: ['createdAt'],
+        where: {
+            userId,
+            createdAt: {gte: oneWeekAgo}//(gte = greater than or equal to)
+        },
+        _count: {
+            id: true
+        }
+    })
+
+    return res.status(200).json({taskStats, recentTasks, weeklyProgress})
+}
+
+
+//GET /api/analytics/users
+async function getUsersWithStats(req, res){
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
+
+
+const usersRaw = await prisma.user.findMany({
+    include:{
+        Task: {//for each user, fetch related tasks // this is the relationship, User->Task[], from schema's @relation
+            // "Task": [{ "id": 3 }]         // just a preview — up to 5 incomplete ones
+            where: {isCompleted: false}, //fetch tasks that are not completed
+            select: {id: true},//for each of those incomplete tasks, fetch only the id(not the full task of object)
+            take:5 //limit5
+            },
+        _count: {//count all tasks from that user 
+            //counting per user, not whole Task table
+            // example:
+            // [
+            //   { "id": 1, "name": "John",  "_count": { "Task": 8 } },
+            //   { "id": 2, "name": "Maria", "_count": { "Task": 15 } },
+            //   { "id": 3, "name": "Alex",  "_count": { "Task": 27 } }
+            // ]
+
+            // "for each individual user in this query's results, count how many Task records are related to that specific user — not the entire tasks table across all users combined."
+            // "_count": { "Task": 8 },      // total task count (all of them)
+            select:{
+                Task: true
+            }
+        }
+        },
+        skip: skip,
+        take:limit,
+        orderBy: {createdAt: 'desc'}
+    })
+
+    const users = usersRaw.map(user=>({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+        _count: user._count,
+        Task: user.Task
+    }))
+
+    const totalUsers = await prisma.user.count()
+
+    const pagination = {
+        page: page, //which page is currently being viewed
+        limit: limit,
+        total: totalUsers,
+        pages: Math.ceil(totalUsers / limit),//how many pages exist in total.
+        hasNext: page * limit < totalUsers,
+        hasPrev: page > 1
+    }
+
+    return res.status(200).json({users, pagination})
+}
+//"search bar" feature
+// GET /api/analytics/tasks/search
+async function searchTasks(req, res) {
+    const searchQuery = req.query.q //.q -> if someone types "prisma", example URL:GET /api/analytics/tasks/search?q=prisma// req.query.q  // "prisma"
+    //And your backend (this function) would search through all tasks, checking:
+    // Does the task's title contain "prisma" anywhere? (case-insensitive)
+    // Does the task's owner's name contain "prisma" anywhere? (also searched — remember the SQL joins tasks and users, checking both t.title and u.name)
+    
+    // Validate search query
+    if(!searchQuery || searchQuery.trim().length < 2){
+        return res.status(400).json({
+            error: "Search query must be at least 2 characters long"
+        })
+    }
+    // Get limit from query (default to 20)
+const limit = parseInt(req.query.limit) || 20
+
+// Construct search patterns outside the query for proper parameterization
+const searchPattern = `%${searchQuery}%`
+const exactMatch = searchQuery
+const startsWith = `${searchQuery}%`
+
+// ${searchQuery}% and %${searchQuery}% — what do these mean?
+// These are building SQL pattern-matching strings, using the % wildcard character (which means "any sequence of characters, including none" in SQL's LIKE/ILIKE matching).
+// Say searchQuery is "prisma". Then:
+// ${searchQuery}% → becomes "prisma%" → means "starts with 'prisma', followed by anything" — matches "prisma tutorial," but not "learn prisma"
+// %${searchQuery}% → becomes "%prisma%" → means "contains 'prisma' anywhere, with anything before and after" — matches "learn prisma," "prisma tutorial," "my prisma notes," all of them
+// exactMatch (just searchQuery alone, no %) → stays "prisma" → means "matches exactly this text, nothing more, nothing less"
+
+
+
+// Use raw SQL for complex text search with parameterized queries
+const searchResults = await prisma.$queryRaw`
+SELECT
+t.id,
+t.title,
+t.is_completed as "isCompleted",
+t.priority,
+t.created_at as "createdAt",
+t.user_id as "userId",
+u.name as "user_name"
+FROM tasks t
+JOIN users u ON t.user_id = u.id
+WHERE t.title ILIKE ${searchPattern}
+OR u.name ILIKE ${searchPattern}
+ORDER BY
+CASE 
+WHEN t.title ILIKE ${exactMatch} THEN 1
+WHEN t.title ILIKE ${startsWith} THEN 2
+WHEN t.title ILIKE ${searchPattern} THEN 3
+ELSE 4
+END,
+t.created_at DESC
+LIMIT ${parseInt(limit)}
+`
+//WHERE t.title ILIKE ${searchPattern} means: "find rows in the tasks table (aliased as t) where the title column, matched case-insensitively, contains the pattern held in searchPattern."
+// if searchPattern is "%prisma%", this line would match all of these task titles, regardless of capitalization:
+
+// "Learn Prisma"
+// "learn prisma"
+// "LEARN PRISMA"
+// "my Prisma notes"
+
+//====RANKING=====SORT by best matching
+// So the full flow, concretely, for a search on "cat":
+
+// Filter: Postgres scans every row, keeping only ones where the title or owner's name contains "cat" somewhere — say this leaves you with 5 matching rows.
+// Rank: for each of those 5 surviving rows, compute a number (1, 2, 3, or 4) representing how good a match it is.
+// Sort: arrange those 5 rows by that number, smallest first — so the best matches (exact title match) appear at the very top of the results, and weaker matches (just happened to match via the owner's name) sink to the bottom.
+// Limit: finally, LIMIT ${limit} cuts the sorted list down to however many results you asked for (default 20).
+
+
+return res.status(200).json({
+    results: searchResults,
+    query: searchQuery,
+    count: searchResults.length
+
+})
+
+}
+module.exports= {getUserAnalytics, getUsersWithStats, searchTasks}
+
+
+
+// ========model Task (Prisma schema — the blueprint)=======
+// id: Int
+// title: String
+// isCompleted: Boolean
+// priority: String
+// userId: Int
+// createdAt: DateTime
+// @@map("tasks")
+
+
+
+// ========tasks (real PostgreSQL table)========
+// id |      title |         is_completed | priority | user_id | created_at
+// 5  |      Buy milk |      false |         medium |    12 |    2024-01-15
+// 6  |      Finish report | true |          high |      12 |    2024-01-16
+// 7  |      Call dentist |  false |         low |       3  |    2024-01-17
+// each row below the header = one individual task
+// Task (model) describes the shape — tasks (table) holds the real rows
