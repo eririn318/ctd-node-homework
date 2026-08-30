@@ -7,6 +7,7 @@ const send401 = (res) => {
     })
 }
 module.exports = async(req, res, next) => {
+    //Authentication(who are you?)
     const token = req?.cookies?.jwt;
     if(!token) {
         return send401(res)
@@ -15,7 +16,7 @@ module.exports = async(req, res, next) => {
         if(err) {
             return send401(res)
         }
-
+    //Authorization are you allowed to do this?
         req.user = {id: decoded.id}
         if(["POST", "PATCH", "PUT", "DELETE", "CONNECT"].includes(req.method)){
             if (req.get("X-CSRF-TOKEN") != decoded.csrfToken) {
