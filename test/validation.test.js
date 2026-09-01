@@ -69,6 +69,7 @@ describe("user object validation tests", () => {
     );
     expect(error).toBeFalsy();
   });
+})
 
   describe("task object validation tests", () => {
     it("8. requires a title", () => {
@@ -115,4 +116,3 @@ describe("user object validation tests", () => {
       expect(value.isCompleted).toBeUndefined();
     });
   });
-});

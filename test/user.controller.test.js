@@ -124,8 +124,8 @@ describe("testing logon, register, and logoff", () => {
       method: "POST",
       body: {
         name: "Bob",
-        email: "bob-sample.com",
-        password: "pa$$word20",
+        email: "bob@sample.com",
+        password: "wrongPassword123"",
       },
     });
     saveRes = MockResponseWithCookies();
