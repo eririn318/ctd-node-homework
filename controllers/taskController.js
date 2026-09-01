@@ -1,3 +1,6 @@
+
+
+
 const {taskSchema, patchTaskSchema} = require("../validation/taskSchema")
 const prisma = require("../db/prisma")
 
@@ -12,7 +15,7 @@ async function create(req, res) {
     }
   
     const task = await prisma.task.create({
-        data:{title: value.title, isCompleted: value.isCompleted ?? false, userId: global.user_id, priority: value.priority || "medium"},
+        data:{title: value.title, isCompleted: value.isCompleted ?? false, userId: req.user.id, priority: value.priority || "medium"},
         select: {id: true, title: true, isCompleted: true, priority:true}
     })
     return res.status(201).json(task)
@@ -38,7 +41,7 @@ if (limit < 1 || limit > 100){
     })
 }
 
-  const whereClause = {userId: global.user_id}
+  const whereClause = {userId: req.user.id}
 
     if (req.query.find) {
         whereClause.title = {
@@ -92,11 +95,8 @@ async function show (req, res, next) {
 try{
     task = await prisma.task.findUnique({
         where:{
-            id_userId:
-                {
                     id: taskId, 
-                    userId: global.user_id
-                }
+                    userId: req.user.id
             },
         select:{
             id: true, 
@@ -144,11 +144,8 @@ try{
             updatedTask = await prisma.task.update({
                 data: value,
                 where: {
-                    id_userId:
-                        {
                             id: taskId, 
-                            userId: global.user_id
-                        }
+                            userId: req.user.id
             },
                 select: {id: true, title: true, isCompleted: true, priority: true}
             }  
@@ -176,11 +173,8 @@ try{
     await prisma.task.delete(
     {
         where: {
-            id_userId:
-                {
                 id: taskId, 
-                userId: global.user_id
-                }
+                userId: req.user.id     
          }
     }
 )
@@ -221,7 +215,7 @@ if(!tasks || !Array.isArray(tasks) || tasks.length === 0) {
             title: value.title,
             isCompleted: value.isCompleted || false,
             priority: value.priority || 'medium',
-            userId: global.user_id
+            userId: req.user.id
         })
       }
         // 3. Bulk insert into PostgreSQL at once!

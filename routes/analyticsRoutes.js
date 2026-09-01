@@ -1,7 +1,9 @@
 const express = require("express")
 const router = express.Router()
 const {getUserAnalytics, getUsersWithStats, searchTasks } = require("../controllers/analyticsController.js")
+const jwtMiddleware = require("../middleware/jwtMiddleware")
 
+router.use(jwtMiddleware)
 
 // GET /api/analytics/users/:id -> getUserAnalytics
 router.get("/users/:id", getUserAnalytics)

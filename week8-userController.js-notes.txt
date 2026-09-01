@@ -2,27 +2,38 @@ const {userSchema} = require("../validation/userSchema")
 const crypto = require("crypto")
 const util = require("util")
 const prisma = require("../db/prisma")
-const {randomUUID} = require("crypto")
-const jwt = require("jsonwebtoken")
+const {randomUUID} = require("crypto")// built-in Node.js function to generate a random unique ID
+const jwt = require("jsonwebtoken")// library for signing and verifying JWTs
 
 const cookieFlags =(req) => {
     return {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict" 
+        httpOnly: true,// JS on the page can't read this cookie (protects against theft via XSS)
+        secure: process.env.NODE_ENV === "production",// only send over HTTPS in production // // if "production" !== "production" become false
+        sameSite: "Strict" // never send this cookie on requests coming from another site (helps block CSRF)
+  };
 };
-}
+
 const setJwtCookie = (req, res, user) => {
+    // Build the JWT payload: who the user is + a random secret CSRF token
     const payload = {id: user.id, csrfToken: randomUUID()}
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})//1hour expiration
-        res.cookie(
+    
+    // Sign the payload with our server-only secret; token expires in 1 hour
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: "1h"})//1hour expiration
+    
+    // Attach the signed JWT to the response as a cookie named "jwt"
+    res.cookie(
         "jwt", // name of the cookie
         token, // value of the cookie: the signed JWT string
         {
         ...cookieFlags(req),
+        //inside ...cookieFlags(req)
+            //httpOnly: true,   // JS running in the browser can't read this cookie (protects against XSS theft)
+            //secure: false,    // (in dev environment) allow sending over plain HTTP, not just HTTPS
+            //sameSite: "Strict", // never send this cookie on requests coming from another site (helps block CSRF)
         maxAge: 3600000
         })//1hour = 3,600,000 ms  expiration
 
+        // Return just the csrfToken so the caller (logon/register) can send it back in the response body
         return payload.csrfToken 
     }
 
@@ -83,7 +94,7 @@ async function comparePassword(inputPassword, storedHash) {
                     title: true,
                     isCompleted: true,
                     userId: true,
-                    priority: true,
+                    priority: true
                 }
             })
             return{user: newUser, welcomeTasks} 
@@ -92,16 +103,13 @@ async function comparePassword(inputPassword, storedHash) {
      const csrfToken = setJwtCookie(req, res, result.user)//create JWT + set cookie
         
      res.status(201)
-        return res.json({
-            // user: result.user,
-            // welcomeTasks: result.welcomeTasks,
-            // transactionStatus: "success",
-            user:{
-                name: result.user.name, 
-                email: result.user.email,
-            },
+        res.json({
+            user: result.user,
+            welcomeTasks: result.welcomeTasks,
+            transactionStatus: "success",
             csrfToken:csrfToken//include CSRF token in the response
         })
+        return
     }catch(err){
         if(err.code === "P2002") {
             return res.status(400).json({
@@ -142,6 +150,7 @@ if(goodCredentials){
         const csrfToken = setJwtCookie(req, res, user) //create JWT + set cookie
         
         return res.status(200).json ({
+            id: user.id,
             name: user.name, 
             email: user.email,
             csrfToken: csrfToken//include CSRF token in the response
