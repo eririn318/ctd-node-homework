@@ -47,9 +47,11 @@ describe("register a user", () => {
     expect(res.status).not.toBe(401);
   });
   it("51. Verify that you can log out", async () => {
-    const token = saveRes.body.csrfToken;
+    const token = saveRes.body.csrfToken || saveRes.headers["x-csrf-token"];
     expect(token).toBeDefined();
-    saveRes = await agent.post("/api/users/logoff").set("X-CSRF-TOKEN", token);
+    saveRes = await agent
+    .post("/api/users/logoff")
+    .set("X-CSRF-TOKEN", token);
     expect(saveRes.status).toBe(200);
   });
   it("52. Make sure that you are really logged out: /api/tasks should now return a 401", async () => {

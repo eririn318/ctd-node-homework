@@ -115,12 +115,8 @@ describe("test getting created tasks", () => {
     saveRes = httpMocks.createResponse({
       eventEmitter: EventEmitter,
     });
-    expect.assertions(1);
-    try {
-      await waitForRouteHandlerCompletion(index, req, saveRes);
-    } catch (err) {
-      expect(err.name).toBe("TypeError");
-    }
+    await waitForRouteHandlerCompletion(index, req, saveRes)
+    expect(saveRes.statusCode).toBe(404)
   });
   it("21.  If you use user1's id on index() the call returns a 200 status.", async () => {
     const req = httpMocks.createRequest({
@@ -134,14 +130,7 @@ describe("test getting created tasks", () => {
     expect(saveRes.statusCode).toBe(200);
   });
   it("22. The returned object has a tasks array of length 1", async () => {
-    const req = httpMocks.createRequest({
-      method: "GET",
-    });
-    req.user = { id: user1.id };
-    saveRes = httpMocks.createResponse({
-      eventEmitter: EventEmitter,
-    });
-    await waitForRouteHandlerCompletion(index, req, saveRes);
+// Reuse the response payload from Test 21
     saveData = saveRes._getJSONData();
     expect(saveData.tasks.length).toBe(1);
   });
@@ -178,9 +167,7 @@ describe("test getting created tasks", () => {
       eventEmitter: EventEmitter,
     });
     await waitForRouteHandlerCompletion(index, req, saveRes);
-    saveData = saveRes._getJSONData();
-
-    expect(saveData.tasks.length).toBe(0);
+    expect(saveRes.statusCode).toBe(404);
   });
 
   it("26. You can retrieve the created task using show()", async () => {
