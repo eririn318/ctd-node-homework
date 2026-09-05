@@ -15,13 +15,17 @@ async function create(req, res) {
     }
   
     const task = await prisma.task.create({
-        data:{title: value.title, isCompleted: value.isCompleted ?? false, userId: req.user.id, priority: value.priority || "medium"},
-        select: {id: true, title: true, isCompleted: true, priority:true}
+        data:{title: value.title, isCompleted: value.isCompleted ?? false, userId: req.user.id},
+        select: {id: true, title: true, isCompleted: true}
     })
     return res.status(201).json(task)
 }
 
 async function index(req, res){
+//return 404 if userID is missing
+if(!req.user || !req.user.id) {
+    return res.status(404).json({message: "User ID required"})
+}
 // Parse pagination parameters
 const page = req.query.page !== undefined ? parseInt(req.query.page) : 1;
 const limit = req.query.limit !== undefined ?parseInt(req.query.limit) : 10;
@@ -58,11 +62,6 @@ const tasks = await prisma.task.findMany({
             isCompleted:true, 
             priority: true, 
             createdAt: true, 
-            User: {
-                select: {
-                    name:true,
-                    email: true
-            }}
         },
         skip: skip,
         take: limit,
@@ -72,6 +71,11 @@ const tasks = await prisma.task.findMany({
     const totalTasks = await prisma.task.count({
         where: whereClause
     })
+
+    // If user2 has 0 tasks, return 404
+    if(tasks.length === 0) {
+        return res.status(404).json({message: "No tasks found for this user"})
+    }
 
     const pagination = {
         page: page,
