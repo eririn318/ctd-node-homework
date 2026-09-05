@@ -46,6 +46,9 @@ describe("testing logon, register, and logoff", () => {
   it("33. A user can be registered", async () => {
     const req = httpMocks.createRequest({
       method: "POST",
+      headers: {
+        "x-recaptcha-test": process.env.RECAPTCHA_BYPASS, // <--- ADD THIS
+      },
       body: {
         name: "Bob",
         email: "bob@sample.com",
@@ -59,6 +62,9 @@ describe("testing logon, register, and logoff", () => {
   it("34. The user can logon", async () => {
     const req = httpMocks.createRequest({
       method: "POST",
+      headers: {
+        "x-recaptcha-test": process.env.RECAPTCHA_BYPASS, // <--- ADD THIS
+      },
       body: {
         email: "bob@sample.com",
         password: "pa$$word20",
@@ -81,6 +87,9 @@ describe("testing logon, register, and logoff", () => {
   it("37. The returned data from the register has the expected name", async () => {
     const req = httpMocks.createRequest({
       method: "POST",
+      headers: {
+        "x-recaptcha-test": process.env.RECAPTCHA_BYPASS, // <--- ADD THIS
+      },
       body: {
         name: "Bob",
         email: "bob37@sample.com",
@@ -95,6 +104,9 @@ describe("testing logon, register, and logoff", () => {
   it("38. The returned data contains a csrfToken", async () => {
     const req = httpMocks.createRequest({
       method: "POST",
+      headers: {
+        "x-recaptcha-test": process.env.RECAPTCHA_BYPASS, // <--- ADD THIS
+      },
       body: {
         name: "Bob",
         email: "bob38@sample.com",
@@ -142,6 +154,9 @@ describe("testing logon, register, and logoff", () => {
   it("42. can't register with an email address that is already registered", async () => {
     const req = httpMocks.createRequest({
       method: "POST",
+      headers: {
+        "x-recaptcha-test": process.env.RECAPTCHA_BYPASS, // <--- ADD THIS
+      },
       body: {
         name: "Bob",
         email: "bob@sample.com",
