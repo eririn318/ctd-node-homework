@@ -4,7 +4,7 @@ const util = require("util")
 const prisma = require("../db/prisma")
 const {randomUUID} = require("crypto")
 const jwt = require("jsonwebtoken")
-
+const { StatusCodes } = require("http-status-codes");
 const cookieFlags =(req) => {
     return {
         httpOnly: true,
