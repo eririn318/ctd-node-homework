@@ -69,7 +69,7 @@ const tasks = await prisma.task.findMany({
         },
         skip: skip,
         take: limit,
-        orderBy: {[sortBy]: setDirection}
+        orderBy: {[sortBy]: sortDirection}
     })
     // Get total count for pagination metadata
     const totalTasks = await prisma.task.count({
