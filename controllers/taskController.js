@@ -54,6 +54,10 @@ if (limit < 1 || limit > 100){
         }
     }
 
+    const allowedSortField = ["title", "isCompleted", "priority", "createdAt"]
+    const sortBy = allowedSortField.includes(req.query.sortBy) ? req.query.sortBy : "createdAt"
+    const sortDirection = req.query.sortDirection === "asc" ? "asc" : "desc"
+
 const tasks = await prisma.task.findMany({
         where: whereClause,
         select: {
@@ -65,7 +69,7 @@ const tasks = await prisma.task.findMany({
         },
         skip: skip,
         take: limit,
-        orderBy: {createdAt: 'desc'}
+        orderBy: {[sortBy]: sortDirection}
     })
     // Get total count for pagination metadata
     const totalTasks = await prisma.task.count({
