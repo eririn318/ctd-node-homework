@@ -1,2 +1,45 @@
 //Render URL
 https://ctd-node-homework-10.onrender.com
+
+======================================================================
+PROJECT SUMMARY - ASSIGNMENT 11 FINAL PROJECT
+======================================================================
+
+----------------------------------------------------------------------
+Interactive Swagger API Documentation (`/api-docs`)
+----------------------------------------------------------------------
+
+--- Interactive Swagger Documentation UI ---
+• Path: http://localhost:3000/api-docs/
+• Description: Serves interactive Swagger UI documentation for all endpoints.
+• Features for Testing:
+    - Click the green "Authorize" button at the top right to set the "X-CSRF-Token" header for testing protected routes.
+    - Full schema and body inputs provided for task CRUD routes, including PATCH /api/tasks/{id} and POST /api/tasks/bulk.
+
+----------------------------------------------------------------------
+3. HOW TO TEST THE FLOW
+----------------------------------------------------------------------
+1. Open Swagger UI at http://localhost:3000/api-docs (or live Render URL /api-docs).
+2. Execute `POST /api/users/logon` with valid user credentials.
+3. Copy the `csrf-token` from the login response body.
+4. Click the green "Authorize 🔓" button at the top right of Swagger UI, paste the token into the `X-CSRF-Token` field, and click Authorize.
+5. ex:Expand `POST /api/tasks/bulk`, click "Try it out", paste the bulk tasks JSON array, and click Execute.
+    
+    ---Bulk Task Creation ---
+        • Path: /api/tasks/bulk
+        • Method: POST
+        • Authentication: Requires active session cookie (via /api/users/logon)
+        • Headers Required:
+            - Content-Type: application/json
+            - x-csrf-token: <CSRF token string returned from logon endpoint>
+        • Query Parameters: None
+        • Request Body (JSON):
+            {
+            "tasks": [
+                { "title": "Buy groceries" },
+                { "title": "Complete Assignment 11 Presentation" }
+            ]
+            }
+        • Expected Success Response (201 Created):
+            Returns an array of newly created task objects associated with the logged-in user.
+

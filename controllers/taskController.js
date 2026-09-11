@@ -1,6 +1,3 @@
-
-
-
 const {taskSchema, patchTaskSchema} = require("../validation/taskSchema")
 const prisma = require("../db/prisma")
 
