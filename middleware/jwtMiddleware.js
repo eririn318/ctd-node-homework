@@ -1,28 +1,28 @@
-const jwt = require("jsonwebtoken")
-const {StatusCodes} = require("http-status-codes")
+const jwt = require("jsonwebtoken");
+const { StatusCodes } = require("http-status-codes");
 
 const send401 = (res) => {
-    res.status(StatusCodes.UNAUTHORIZED).json({
-        message: "No user is authenticated."
-    })
-}
-module.exports = async(req, res, next) => {
-    //Authentication(who are you?)
-    const token = req?.cookies?.jwt;
-    if(!token) {
-        return send401(res)
+  res.status(StatusCodes.UNAUTHORIZED).json({
+    message: "No user is authenticated.",
+  });
+};
+module.exports = async (req, res, next) => {
+  //Authentication(who are you?)
+  const token = req?.cookies?.jwt;
+  if (!token) {
+    return send401(res);
+  }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return send401(res);
     }
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if(err) {
-            return send401(res)
-        }
     //Authorization are you allowed to do this?
-        req.user = {id: decoded.id}
-        if(["POST", "PATCH", "PUT", "DELETE", "CONNECT"].includes(req.method)){
-            if (req.get("X-CSRF-TOKEN") != decoded.csrfToken) {
-                return send401(res)
-            }
-        }
-        next() //if the token is good
-    })
-}
+    req.user = { id: decoded.id };
+    if (["POST", "PATCH", "PUT", "DELETE", "CONNECT"].includes(req.method)) {
+      if (req.get("X-CSRF-TOKEN") != decoded.csrfToken) {
+        return send401(res);
+      }
+    }
+    next(); //if the token is good
+  });
+};

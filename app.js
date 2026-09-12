@@ -50,10 +50,16 @@ app.get("/health", async (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 const port = process.env.PORT || 3000;
-
-const server = app.listen(port, () => {
-  console.log(`Server is listening on port ${port}...`);
-});
+let server;
+// Only start the server if not running tests
+if (process.env.NODE_ENV !== "test") {
+  server = app.listen(port, () => {
+    console.log(`Server is listening on port ${port}...`);
+  });
+}
+// const server = app.listen(port, () => {
+//   console.log(`Server is listening on port ${port}...`);
+// });
 
 async function shutdown() {
   await prisma.$disconnect();

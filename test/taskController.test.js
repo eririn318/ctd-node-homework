@@ -115,8 +115,8 @@ describe("test getting created tasks", () => {
     saveRes = httpMocks.createResponse({
       eventEmitter: EventEmitter,
     });
-    await waitForRouteHandlerCompletion(index, req, saveRes)
-    expect(saveRes.statusCode).toBe(404)
+    await waitForRouteHandlerCompletion(index, req, saveRes);
+    expect(saveRes.statusCode).toBe(404);
   });
   it("21.  If you use user1's id on index() the call returns a 200 status.", async () => {
     const req = httpMocks.createRequest({
@@ -130,7 +130,7 @@ describe("test getting created tasks", () => {
     expect(saveRes.statusCode).toBe(200);
   });
   it("22. The returned object has a tasks array of length 1", async () => {
-// Reuse the response payload from Test 21
+    // Reuse the response payload from Test 21
     saveData = saveRes._getJSONData();
     expect(saveData.tasks.length).toBe(1);
   });

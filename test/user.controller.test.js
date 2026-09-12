@@ -117,17 +117,17 @@ describe("testing logon, register, and logoff", () => {
     await waitForRouteHandlerCompletion(register, req, saveRes);
     saveData = saveRes._getJSONData();
 
-    const setCookieArray = saveRes.get("Set-Cookie")
-    jwtCookie = setCookieArray?.find((str) => str.startsWith("jwt="))
+    const setCookieArray = saveRes.get("Set-Cookie");
+    jwtCookie = setCookieArray?.find((str) => str.startsWith("jwt="));
     expect(saveData).toHaveProperty("csrfToken");
   });
   it("39. can now logoff", async () => {
-    const tokenVal = jwtCookie ? jwtCookie.split(";")[0].split("=")[1] : ""
+    const tokenVal = jwtCookie ? jwtCookie.split(";")[0].split("=")[1] : "";
     const req = httpMocks.createRequest({
       method: "POST",
-      cookies:{
-        jwt:tokenVal
-      }
+      cookies: {
+        jwt: tokenVal,
+      },
     });
     saveRes = MockResponseWithCookies();
     await waitForRouteHandlerCompletion(logoff, req, saveRes);
