@@ -2,52 +2,77 @@
 https://ctd-node-homework-10.onrender.com
 
 ======================================================================
-PROJECT SUMMARY - ASSIGNMENT 11 FINAL PROJECT
+PROJECT SUMMARY & EXTRA FEATURES
 ======================================================================
 
-----------------------------------------------------------------------
-Interactive Swagger API Documentation (`/api-docs`)
-----------------------------------------------------------------------
+Extra Features Added:
+1. Interactive Swagger API Documentation (OpenAPI at /api-docs)
 
---- Interactive Swagger Documentation UI ---
-• Path: http://localhost:3000/api-docs/
-• Description: Serves interactive Swagger UI documentation for all endpoints.
-• Features for Testing:
-    - Click the green "Authorize" button at the top right to set the "X-CSRF-Token" header for testing protected routes.
-    - Full schema and body inputs provided for task CRUD routes, including PATCH /api/tasks/{id} and POST /api/tasks/bulk.
 
-----------------------------------------------------------------------
-3. HOW TO TEST THE FLOW
-----------------------------------------------------------------------
-1. Open Swagger UI at http://localhost:3000/api-docs (or live Render URL /api-docs).
+Description:
+Integrated Swagger UI into the Express backend to automatically generate 
+interactive API documentation for all endpoints. Reviewers can test all routes directly from the browser 
+without needing Postman.
+
+URLs to Access Swagger UI:
+- Deployed Application: https://ctd-node-homework-10.onrender.com/api-docs
+- Local Development:   http://localhost:3000/api-docs
+
+======================================================================
+HOW TO TEST THE FLOW IN SWAGGER UI
+======================================================================
+
+1. Open Swagger UI at https://ctd-node-homework-10.onrender.com/api-docs (or http://localhost:3000/api-docs).
 2. Execute `POST /api/users/logon` with valid user credentials.
-3. Copy the `csrf-token` from the login response body.
+3. Copy the `csrf-token` string returned in the logon response body.
 4. Click the green "Authorize 🔓" button at the top right of Swagger UI, paste the token into the `X-CSRF-Token` field, and click Authorize.
-5. ex:Expand `POST /api/tasks/bulk`, click "Try it out", paste the bulk tasks JSON array, and click Execute.
-    
-    ---Bulk Task Creation ---
-        • Path: /api/tasks/bulk
-        • Method: POST
-        • Authentication: Requires active session cookie (via /api/users/logon)
-        • Headers Required:
-            - Content-Type: application/json
-            - x-csrf-token: <CSRF token string returned from logon endpoint>
-        • Query Parameters: None
-        • Request Body (JSON):
-            {
-            "tasks": [
-                { "title": "Buy groceries" },
-                { "title": "Complete Assignment 11 Presentation" }
-            ]
-            }
-        • Expected Success Response (201 Created):
-            Returns an array of newly created task objects associated with the logged-in user.
+5. Expand any protected route (e.g., `POST /api/tasks/bulk`), click "Try it out", enter the required request body, and click Execute.
 
-----------------------------------------------------------------------
-Analytics & Search REST API Endpoints
-----------------------------------------------------------------------
+======================================================================
+SUMMARY OF AVAILABLE API ENDPOINTS
+======================================================================
 
---- 1. Get User Analytics ---
+- Auth:
+  • POST /api/users/register
+  • POST /api/users/logon
+  • POST /api/users/logoff
+
+- Tasks (CRUD & Bulk):
+  • GET    /api/tasks
+  • POST   /api/tasks
+  • GET    /api/tasks/:id
+  • PATCH  /api/tasks/:id
+  • DELETE /api/tasks/:id
+  • POST   /api/tasks/bulk
+
+- Analytics & Search:
+  • GET /api/analytics/users/:id
+  • GET /api/analytics/users
+  • GET /api/analytics/tasks/search
+
+======================================================================
+EXTRA / ADVANCED REST API ENDPOINTS DETAILS
+======================================================================
+
+--- 1. Bulk Task Creation ---
+• Path: /api/tasks/bulk
+• Method: POST
+• Authentication: Required (active session cookie via /api/users/logon)
+• Headers Required:
+    - Content-Type: application/json
+    - x-csrf-token: <CSRF token from logon response>
+• Query Parameters: None
+• Request Body (JSON):
+    {
+      "tasks": [
+        { "title": "Buy groceries" },
+        { "title": "Complete Assignment 11 Presentation" }
+      ]
+    }
+• Expected Success Response (201 Created):
+    Returns an array of newly created task objects associated with the logged-in user.
+
+--- 2. Get User Analytics ---
 • Path: /api/analytics/users/:id
 • Method: GET
 • Authentication: None
@@ -77,7 +102,7 @@ Analytics & Search REST API Endpoints
       ]
     }
 
---- 2. Get Users with Task Statistics ---
+--- 3. Get Users with Task Statistics ---
 • Path: /api/analytics/users
 • Method: GET
 • Authentication: None
@@ -107,7 +132,7 @@ Analytics & Search REST API Endpoints
       }
     }
 
---- 3. Search Tasks ---
+--- 4. Search Tasks ---
 • Path: /api/analytics/tasks/search
 • Method: GET
 • Authentication: None
