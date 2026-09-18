@@ -69,50 +69,50 @@ describe("user object validation tests", () => {
     );
     expect(error).toBeFalsy();
   });
-})
+});
 
-  describe("task object validation tests", () => {
-    it("8. requires a title", () => {
-      const { error } = taskSchema.validate({}, { abortEarly: false });
-      expect(
-        error.details.find((detail) => detail.context.key == "title"),
-      ).toBeDefined();
-    });
-    it("9. If an isCompleted value is specified, it must be valid", () => {
-      const { error } = taskSchema.validate(
-        { title: "first task", isCompleted: "not-a-boolean" },
-        { abortEarly: false },
-      );
-      expect(
-        error.details.find((detail) => detail.context.key == "isCompleted"),
-      ).toBeDefined();
-    });
-    it("10. If an isCompleted value is not specified but the rest of the object is valid, a default of false is provided by validation", () => {
-      const { value } = taskSchema.validate(
-        { title: "first task" },
-        { abortEarly: false },
-      );
-      expect(value.isCompleted).toBe(false);
-    });
-    it("11. If isCompleted in the provided object has the value true, it remains true after validation", () => {
-      const { value } = taskSchema.validate(
-        { title: "first task", isCompleted: true },
-        { abortEarly: false },
-      );
-      expect(value.isCompleted).toBe(true);
-    });
+describe("task object validation tests", () => {
+  it("8. requires a title", () => {
+    const { error } = taskSchema.validate({}, { abortEarly: false });
+    expect(
+      error.details.find((detail) => detail.context.key == "title"),
+    ).toBeDefined();
   });
+  it("9. If an isCompleted value is specified, it must be valid", () => {
+    const { error } = taskSchema.validate(
+      { title: "first task", isCompleted: "not-a-boolean" },
+      { abortEarly: false },
+    );
+    expect(
+      error.details.find((detail) => detail.context.key == "isCompleted"),
+    ).toBeDefined();
+  });
+  it("10. If an isCompleted value is not specified but the rest of the object is valid, a default of false is provided by validation", () => {
+    const { value } = taskSchema.validate(
+      { title: "first task" },
+      { abortEarly: false },
+    );
+    expect(value.isCompleted).toBe(false);
+  });
+  it("11. If isCompleted in the provided object has the value true, it remains true after validation", () => {
+    const { value } = taskSchema.validate(
+      { title: "first task", isCompleted: true },
+      { abortEarly: false },
+    );
+    expect(value.isCompleted).toBe(true);
+  });
+});
 
-  describe("patchTaskSchema validation tests", () => {
-    it("12. does not require a title", () => {
-      const { error } = patchTaskSchema.validate(
-        { isCompleted: true },
-        { abortEarly: false },
-      );
-      expect(error).toBeFalsy();
-    });
-    it("13. If no value is provided for isCompleted this remains undefined in the returned value", () => {
-      const { value } = patchTaskSchema.validate({}, { abortEarly: false });
-      expect(value.isCompleted).toBeUndefined();
-    });
+describe("patchTaskSchema validation tests", () => {
+  it("12. does not require a title", () => {
+    const { error } = patchTaskSchema.validate(
+      { isCompleted: true },
+      { abortEarly: false },
+    );
+    expect(error).toBeFalsy();
   });
+  it("13. If no value is provided for isCompleted this remains undefined in the returned value", () => {
+    const { value } = patchTaskSchema.validate({}, { abortEarly: false });
+    expect(value.isCompleted).toBeUndefined();
+  });
+});

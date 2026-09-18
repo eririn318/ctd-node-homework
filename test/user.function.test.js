@@ -14,7 +14,10 @@ beforeAll(async () => {
 
 afterAll(async () => {
   prisma.$disconnect();
-  server.close();
+  if (server) {
+    //During normal server execution, server holds the active Express server listener, so it will close cleanly.
+    server.close();
+  }
 });
 
 describe("register a user", () => {
@@ -26,9 +29,9 @@ describe("register a user", () => {
       password: "Pa$$word20",
     };
     saveRes = await agent
-    .post("/api/users/register")
-    .set("X-Recaptcha-Test", process.env.RECAPTCHA_BYPASS)
-    .send(newUser);
+      .post("/api/users/register")
+      .set("X-Recaptcha-Test", process.env.RECAPTCHA_BYPASS)
+      .send(newUser);
     expect(saveRes.status).toBe(201);
   });
   it("47. Registration returns an object with the expected name", async () => {
@@ -52,9 +55,7 @@ describe("register a user", () => {
   it("51. Verify that you can log out", async () => {
     const token = saveRes.body.csrfToken || saveRes.headers["x-csrf-token"];
     expect(token).toBeDefined();
-    saveRes = await agent
-    .post("/api/users/logoff")
-    .set("X-CSRF-TOKEN", token);
+    saveRes = await agent.post("/api/users/logoff").set("X-CSRF-TOKEN", token);
     expect(saveRes.status).toBe(200);
   });
   it("52. Make sure that you are really logged out: /api/tasks should now return a 401", async () => {
